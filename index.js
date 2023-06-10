@@ -25,11 +25,29 @@ async function run() {
     const classCollection = client.db("languageDB").collection("classes");
     const usersCollection = client.db("languageDB").collection("users");
     const cartCollection = client.db("languageDB").collection("carts");
-
+    //get all class
     app.get("/classes", async (req, res) => {
       const result = await classCollection.find().toArray();
       res.send(result);
     });
+    //add class
+    app.post("/classes", async (req, res) => {
+      const item = req.body;
+      const result = await classCollection.insertOne(item);
+      res.send(result);
+    });
+    //get my classes by email
+    app.get("/classes/:email", async (req, res) => {
+      //const query = { email: req.params.email };
+      const result = await classCollection
+        .find({ email: req.params.instructor_email
+        })
+        .toArray();
+      res.send(result);
+      console.log(result);
+    });
+
+
 
     //selected class added
     app.post("/carts", async (req, res) => {
@@ -45,12 +63,12 @@ async function run() {
       res.send(result);
       console.log(result);
     });
-    app.delete('/carts/:id', async (req, res) => {
+    app.delete("/carts/:id", async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const result = await cartCollection.deleteOne(query);
       res.send(result);
-    })
+    });
 
     // create new user
 
@@ -67,11 +85,17 @@ async function run() {
       res.send(result);
     });
 
-//get all users
+    //get all users
     app.get("/users", async (req, res) => {
       const result = await usersCollection.find().toArray();
       res.send(result);
     });
+
+
+    
+
+
+
 
     // Connect the client to the server	(optional starting in v4.7)
     // await client.connect();
