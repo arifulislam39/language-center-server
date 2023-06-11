@@ -46,7 +46,7 @@ async function run() {
       res.send(result);
       console.log(result);
     });
-//update class api added
+    //update class api added
     app.put("/updateClass/:id", async (req, res) => {
       const id = req.params.id;
       const filter = { _id: new ObjectId(id) };
@@ -139,6 +139,30 @@ async function run() {
         },
       };
       const result = await usersCollection.updateOne(filter, updateDoc);
+      res.send(result);
+    });
+
+    //payment
+//get single card data for payment
+    app.get("/cart/:id", async (req, res) => {
+      const id = req.params.id;
+      console.log(id);
+      const query = { _id: new ObjectId(id) };
+
+      const options = {
+        projection: {
+          price: 1,
+          class_image: 1,
+          class_name: 1,
+          instructor_name: 1,
+          available_seats: 1,
+          _id: 1,
+          email:1
+        },
+      };
+
+      const result = await cartCollection.findOne(query, options);
+      console.log(result);
       res.send(result);
     });
 
