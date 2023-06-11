@@ -25,6 +25,10 @@ async function run() {
     const classCollection = client.db("languageDB").collection("classes");
     const usersCollection = client.db("languageDB").collection("users");
     const cartCollection = client.db("languageDB").collection("carts");
+
+
+
+    //class related api........
     //get all class
     app.get("/classes", async (req, res) => {
       const result = await classCollection.find().toArray();
@@ -66,24 +70,33 @@ async function run() {
       res.send(result);
     });
 
-// class approve or deny api
+
+    
+    // class approve , deny  feedback api
+
     app.patch("/classes/:id", async (req, res) => {
       const id = req.params.id;
       console.log(id);
       const filter = { _id: new ObjectId(id) };
       const updateDoc = {
-        $set: {
-          
-          status: req.body.status,
-        },
+        $set: {},
       };
+
+      if (req.body.feedback) {
+        updateDoc.$set.feedback = req.body.feedback;
+      }
+
+      if (req.body.status) {
+        updateDoc.$set.status = req.body.status;
+      }
+
       const result = await classCollection.updateOne(filter, updateDoc);
       res.send(result);
     });
 
 
-    // create new user
-
+    //users related api's...........
+   // .............
     app.post("/users", async (req, res) => {
       const user = req.body;
       const query = { email: user.email };
@@ -110,18 +123,12 @@ async function run() {
       const filter = { _id: new ObjectId(id) };
       const updateDoc = {
         $set: {
-          
           role: req.body.role,
         },
       };
       const result = await usersCollection.updateOne(filter, updateDoc);
       res.send(result);
     });
-
-
-   
-
-    
 
     // Connect the client to the server	(optional starting in v4.7)
     // await client.connect();
