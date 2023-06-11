@@ -26,8 +26,6 @@ async function run() {
     const usersCollection = client.db("languageDB").collection("users");
     const cartCollection = client.db("languageDB").collection("carts");
 
-
-
     //class related api........
     //get all class
     app.get("/classes", async (req, res) => {
@@ -47,6 +45,23 @@ async function run() {
         .toArray();
       res.send(result);
       console.log(result);
+    });
+//update class api added
+    app.put("/updateClass/:id", async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      const body = req.body;
+      console.log(body);
+      const updateDoc = {
+        $set: {
+          class_name: body.class_name,
+          class_image: body.class_image,
+          available_seats: body.available_seats,
+          price: body.price,
+        },
+      };
+      const result = await classCollection.updateOne(filter, updateDoc);
+      res.send(result);
     });
 
     //selected class added
@@ -70,8 +85,6 @@ async function run() {
       res.send(result);
     });
 
-
-    
     // class approve , deny  feedback api
 
     app.patch("/classes/:id", async (req, res) => {
@@ -94,9 +107,8 @@ async function run() {
       res.send(result);
     });
 
-
     //users related api's...........
-   // .............
+    // .............
     app.post("/users", async (req, res) => {
       const user = req.body;
       const query = { email: user.email };
