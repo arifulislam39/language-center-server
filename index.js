@@ -38,16 +38,12 @@ async function run() {
     });
     //get my classes by email
     app.get("/classes/:email", async (req, res) => {
-      //const query = { email: req.params.email };
       const result = await classCollection
-        .find({ email: req.params.instructor_email
-        })
+        .find({ email: req.params.instructor_email })
         .toArray();
       res.send(result);
       console.log(result);
     });
-
-
 
     //selected class added
     app.post("/carts", async (req, res) => {
@@ -70,6 +66,22 @@ async function run() {
       res.send(result);
     });
 
+// class approve or deny api
+    app.patch("/classes/:id", async (req, res) => {
+      const id = req.params.id;
+      console.log(id);
+      const filter = { _id: new ObjectId(id) };
+      const updateDoc = {
+        $set: {
+          
+          status: req.body.status,
+        },
+      };
+      const result = await classCollection.updateOne(filter, updateDoc);
+      res.send(result);
+    });
+
+
     // create new user
 
     app.post("/users", async (req, res) => {
@@ -91,11 +103,25 @@ async function run() {
       res.send(result);
     });
 
+    //user make admin or instructor api
+    app.patch("/users/:id", async (req, res) => {
+      const id = req.params.id;
+      console.log(id);
+      const filter = { _id: new ObjectId(id) };
+      const updateDoc = {
+        $set: {
+          
+          role: req.body.role,
+        },
+      };
+      const result = await usersCollection.updateOne(filter, updateDoc);
+      res.send(result);
+    });
+
+
+   
 
     
-
-
-
 
     // Connect the client to the server	(optional starting in v4.7)
     // await client.connect();
