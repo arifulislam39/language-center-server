@@ -1,7 +1,13 @@
 const express = require("express");
 const cors = require("cors");
-const app = express();
 require("dotenv").config();
+const stripe = require('stripe')(process.env.PAYMENT_SECRET_KEY)
+
+
+
+
+const app = express();
+
 const port = process.env.PORT || 5000;
 
 //middle ware
@@ -9,6 +15,7 @@ app.use(cors());
 app.use(express.json());
 
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
+//const { default: Stripe } = require("stripe");
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.4bttisu.mongodb.net/?retryWrites=true&w=majority`;
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
@@ -25,6 +32,7 @@ async function run() {
     const classCollection = client.db("languageDB").collection("classes");
     const usersCollection = client.db("languageDB").collection("users");
     const cartCollection = client.db("languageDB").collection("carts");
+    const paymentCollection = client.db("languageDB").collection("payments");
 
     //class related api........
     //get all class
@@ -143,7 +151,7 @@ async function run() {
     });
 
     //payment
-//get single card data for payment
+    //get single card data for payment
     app.get("/cart/:id", async (req, res) => {
       const id = req.params.id;
       console.log(id);
@@ -157,7 +165,7 @@ async function run() {
           instructor_name: 1,
           available_seats: 1,
           _id: 1,
-          email:1
+          email: 1,
         },
       };
 
@@ -165,6 +173,52 @@ async function run() {
       console.log(result);
       res.send(result);
     });
+
+
+
+
+    //create-payment-intent
+
+
+    app.post("/create-payment-intent", async (req, res) => {
+      const { price } = req.body;
+      console.log(req.body);
+      const amount = parseInt(price * 100);
+
+      try {
+        const paymentIntent = await stripe.paymentIntents.create({
+          amount: amount,
+          currency: "usd",
+          payment_method_types: ["card"],
+        });
+
+        res.send({
+          clientSecret: paymentIntent.client_secret,
+        });
+      } catch (error) {
+        res.status(500).send({
+          error: error.message,
+        });
+      }
+    });
+
+
+
+    app.post('/payments', async (req, res) => {
+      const payment = req.body;
+      const insertResult = await paymentCollection.insertOne(payment);
+    
+      const id= payment._id; // Assuming the ID of the cart item is passed in the request body
+      const query = { _id: new ObjectId(id) };
+      const deleteResult = await cartCollection.deleteOne(query);
+    
+      res.send({ insertResult, deleteResult });
+    });
+    
+
+    
+
+   
 
     // Connect the client to the server	(optional starting in v4.7)
     // await client.connect();
