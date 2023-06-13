@@ -1,10 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 require("dotenv").config();
-const stripe = require('stripe')(process.env.PAYMENT_SECRET_KEY)
-
-
-
+const stripe = require("stripe")(process.env.PAYMENT_SECRET_KEY);
 
 const app = express();
 
@@ -35,17 +32,30 @@ async function run() {
     const paymentCollection = client.db("languageDB").collection("payments");
 
     //class related api........
-    //get all class
-    app.get("/classes", async (req, res) => {
-      const result = await classCollection.find().toArray();
-      res.send(result);
-    });
     //add class
     app.post("/classes", async (req, res) => {
       const item = req.body;
       const result = await classCollection.insertOne(item);
       res.send(result);
     });
+    //get all class
+    app.get("/classes", async (req, res) => {
+      const result = await classCollection.find().toArray();
+      res.send(result);
+    });
+
+    //get popular classes
+    app.get("/popularClass", async (req, res) => {
+      const result = await classCollection
+        .find()
+        .sort({ enrolled_student: -1 })
+        .limit(6)
+        .toArray();
+      res.send(result);
+    });
+
+
+    
     //get my classes by email
     app.get("/classes/:email", async (req, res) => {
       const result = await classCollection
@@ -54,6 +64,7 @@ async function run() {
       res.send(result);
       console.log(result);
     });
+
     //update class api added
     app.put("/updateClass/:id", async (req, res) => {
       const id = req.params.id;
@@ -86,6 +97,8 @@ async function run() {
       res.send(result);
       console.log(result);
     });
+
+    //delete class from selected page
     app.delete("/carts/:id", async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
@@ -136,6 +149,20 @@ async function run() {
       res.send(result);
     });
 
+// all instructor
+    app.get("/instructors", async (req, res) => {
+      const query = { role: 'instructor' };
+      const result = await usersCollection.find(query).toArray();
+      res.send(result);
+    });
+
+    //6 instructor
+    app.get("/instructor", async (req, res) => {
+      const query = { role: 'instructor' };
+      const result = await usersCollection.find(query).limit(6).toArray();
+      res.send(result);
+    });
+
     //user make admin or instructor api
     app.patch("/users/:id", async (req, res) => {
       const id = req.params.id;
@@ -160,12 +187,14 @@ async function run() {
       const options = {
         projection: {
           price: 1,
+          enrolled_student: 1,
           class_image: 1,
           class_name: 1,
           instructor_name: 1,
           available_seats: 1,
           _id: 1,
           email: 1,
+          classId: 1,
         },
       };
 
@@ -174,11 +203,7 @@ async function run() {
       res.send(result);
     });
 
-
-
-
     //create-payment-intent
-
 
     app.post("/create-payment-intent", async (req, res) => {
       const { price } = req.body;
@@ -202,23 +227,28 @@ async function run() {
       }
     });
 
-
-
-    app.post('/payments', async (req, res) => {
+    app.post("/payments", async (req, res) => {
       const payment = req.body;
       const insertResult = await paymentCollection.insertOne(payment);
-    
-      const id= payment._id; // Assuming the ID of the cart item is passed in the request body
+
+      const id = payment._id; // Assuming the ID of the cart item is passed in the request body
       const query = { _id: new ObjectId(id) };
       const deleteResult = await cartCollection.deleteOne(query);
-    
-      res.send({ insertResult, deleteResult });
+
+      const classIds = payment.classId;
+      // const filter = { _id: { $in: classIds } };
+      //const filter= { _id: { $in: payment.classId.map(id => new ObjectId(id)) } }
+      const filter = { _id: new ObjectId(classIds) };
+      const updateDoc = {
+        $inc: {
+          enrolled_student: 1,
+          available_seats: -1,
+        },
+      };
+      const updateResult = await classCollection.updateOne(filter, updateDoc);
+
+      res.send({ insertResult, deleteResult, updateResult });
     });
-    
-
-    
-
-   
 
     // Connect the client to the server	(optional starting in v4.7)
     // await client.connect();
