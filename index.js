@@ -30,6 +30,7 @@ async function run() {
     const usersCollection = client.db("languageDB").collection("users");
     const cartCollection = client.db("languageDB").collection("carts");
     const paymentCollection = client.db("languageDB").collection("payments");
+    const blogCollection = client.db("languageDB").collection("blogs");
 
     //class related api........
     //add class
@@ -227,17 +228,17 @@ async function run() {
       }
     });
 
+    //save payment history
     app.post("/payments", async (req, res) => {
       const payment = req.body;
       const insertResult = await paymentCollection.insertOne(payment);
 
-      const id = payment._id; // Assuming the ID of the cart item is passed in the request body
+      const id = payment._id; 
       const query = { _id: new ObjectId(id) };
       const deleteResult = await cartCollection.deleteOne(query);
 
       const classIds = payment.classId;
-      // const filter = { _id: { $in: classIds } };
-      //const filter= { _id: { $in: payment.classId.map(id => new ObjectId(id)) } }
+      
       const filter = { _id: new ObjectId(classIds) };
       const updateDoc = {
         $inc: {
@@ -248,6 +249,12 @@ async function run() {
       const updateResult = await classCollection.updateOne(filter, updateDoc);
 
       res.send({ insertResult, deleteResult, updateResult });
+    });
+
+    //blog api
+    app.get("/blogs", async (req, res) => {
+      const result = await  blogCollection.find().toArray();
+      res.send(result);
     });
 
     // Connect the client to the server	(optional starting in v4.7)
