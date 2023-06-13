@@ -129,6 +129,13 @@ async function run() {
       res.send(result);
     });
 
+
+    //get enrolled classes
+    app.get("/payments", async (req, res) => {
+      const result = await  paymentCollection.find().toArray();
+      res.send(result);
+    });
+
     //users related api's...........
     // .............
     app.post("/users", async (req, res) => {
@@ -250,6 +257,18 @@ async function run() {
 
       res.send({ insertResult, deleteResult, updateResult });
     });
+
+
+    app.get("/paymentHistory", async (req, res) => {
+      const result = await paymentCollection
+        .find()
+        .sort({ date: -1 })
+        .toArray();
+      res.send(result);
+    });
+
+
+
 
     //blog api
     app.get("/blogs", async (req, res) => {
