@@ -156,13 +156,37 @@ async function run() {
       const result = await usersCollection.find().toArray();
       res.send(result);
     });
+//get all admin
+
+app.get('/users/admin/:email', async (req, res) => {
+  const email = req.params.email;
+  const query = { email: email }
+  const user = await usersCollection.findOne(query);
+  const result = { admin: user?.role === 'admin' }
+  res.send(result);
+})
+
+    
 
 // all instructor
-    app.get("/instructors", async (req, res) => {
-      const query = { role: 'instructor' };
+app.get('/users/instructor/:email', async (req, res) => {
+  const email = req.params.email;
+  const query = { email: email }
+  const user = await usersCollection.findOne(query);
+  const result = {instructor: user?.role === 'instructor' }
+  res.send(result);
+})
+
+
+    
+//student
+    app.get("/student", async (req, res) => {
+      const query = { role: 'student' };
       const result = await usersCollection.find(query).toArray();
       res.send(result);
     });
+
+    
 
     //6 instructor
     app.get("/instructor", async (req, res) => {
@@ -276,6 +300,8 @@ async function run() {
       res.send(result);
     });
 
+
+   
     // Connect the client to the server	(optional starting in v4.7)
     // await client.connect();
     // Send a ping to confirm a successful connection
