@@ -45,26 +45,34 @@ async function run() {
       res.send(result);
     });
 
+    //
+//
+    app.get("/approvedClasses", async (req, res) => {
+      const query = { status: 'approved' };
+      const result = await classCollection.find(query).toArray();
+      res.send(result);
+    });
+
     //get popular classes
     app.get("/popularClass", async (req, res) => {
+      const query = { status: 'approved' };
       const result = await classCollection
-        .find()
+        .find(query)
         .sort({ enrolled_student: -1 })
         .limit(6)
         .toArray();
       res.send(result);
     });
 
-
-    
-    //get my classes by email
+//get my classes by email
     app.get("/classes/:email", async (req, res) => {
       const result = await classCollection
-        .find({ email: req.params.instructor_email })
+        .find({ instructor_email: req.params.email })
         .toArray();
       res.send(result);
       console.log(result);
     });
+    
 
     //update class api added
     app.put("/updateClass/:id", async (req, res) => {
@@ -129,10 +137,11 @@ async function run() {
       res.send(result);
     });
 
-
+   
     //get enrolled classes
-    app.get("/payments", async (req, res) => {
-      const result = await  paymentCollection.find().toArray();
+    app.get("/payments/:email", async (req, res) => {
+      const query = { email: req.params.email };
+      const result = await  paymentCollection.find( query ).toArray();
       res.send(result);
     });
 
@@ -165,20 +174,36 @@ app.get('/users/admin/:email', async (req, res) => {
   const result = { admin: user?.role === 'admin' }
   res.send(result);
 })
-
-    
-
-// all instructor
 app.get('/users/instructor/:email', async (req, res) => {
+  const email = req.params?.email;
+  const query = { email: email }
+  const user = await usersCollection.findOne(query);
+  const result = { instructor: user?.role === 'instructor' }
+  res.send(result);
+})
+app.get('/users/student/:email', async (req, res) => {
   const email = req.params.email;
   const query = { email: email }
   const user = await usersCollection.findOne(query);
-  const result = {instructor: user?.role === 'instructor' }
+  const result = { student: user?.role === 'student' }
   res.send(result);
 })
 
+    // app.get("/admin", async (req, res) => {
+    //   const query = { role: 'admin' };
+    //   const result = await usersCollection.find(query).toArray();
+    //   res.send(result);
+    // });
 
-    
+
+
+
+// all instructor
+    app.get("/instructors", async (req, res) => {
+      const query = { role: 'instructor' };
+      const result = await usersCollection.find(query).toArray();
+      res.send(result);
+    });
 //student
     app.get("/student", async (req, res) => {
       const query = { role: 'student' };
@@ -282,10 +307,11 @@ app.get('/users/instructor/:email', async (req, res) => {
       res.send({ insertResult, deleteResult, updateResult });
     });
 
-
-    app.get("/paymentHistory", async (req, res) => {
+//get paymentHistory
+    app.get("/paymentHistory/:email", async (req, res) => {
+      const query = { email: req.params.email };
       const result = await paymentCollection
-        .find()
+        .find(query)
         .sort({ date: -1 })
         .toArray();
       res.send(result);
